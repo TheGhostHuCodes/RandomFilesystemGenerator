@@ -34,7 +34,7 @@ int main(int argc, char** argv) {
         // clang-format off
         desc.add_options()
                 ("help", "produce help message")
-                ("size", po::value<long>(), "size of file in bytes");
+                ("size,s", po::value<long>(), "size of file in bytes");
         // clang-format on
         po::variables_map vm;
         try {
