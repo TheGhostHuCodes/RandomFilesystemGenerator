@@ -22,35 +22,52 @@ namespace po = boost::program_options;
 static std::random_device rd;
 static std::mt19937 gen{rd()};
 
+const unsigned int SUCCESS = 0;
+const unsigned int ERROR_IN_COMMAND_LINE = 1;
+const unsigned int ERROR_UNHANDLED_EXCEPTION = 2;
+
 int main(int argc, char** argv) {
-    po::options_description desc(
-        "Random Filesystem Generator: Allowed options");
-    // clang-format off
-    desc.add_options()
-      ("help", "produce help message")
-      ("size", po::value<long>(), "size of file in bytes")
-    ;
-    // clang-format on
-    po::variables_map vm;
-    po::store(po::parse_command_line(argc, argv, desc), vm);
-    po::notify(vm);
+    try {
 
-    if (vm.count("help")) {
-        std::cout << desc << std::endl;
-        return 0;
+        po::options_description desc(
+            "Random Filesystem Generator: Allowed options");
+        // clang-format off
+        desc.add_options()
+                ("help", "produce help message")
+                ("size", po::value<long>(), "size of file in bytes");
+        // clang-format on
+        po::variables_map vm;
+        try {
+            po::store(po::parse_command_line(argc, argv, desc), vm);
+            po::notify(vm);
+
+            if (vm.count("help")) {
+                std::cout << desc << std::endl;
+                return SUCCESS;
+            }
+            auto fileSizeInBytes = vm["size"].as<long>();
+
+            std::uniform_int_distribution<unsigned short> dist{
+                std::numeric_limits<unsigned char>::min(),
+                std::numeric_limits<unsigned char>::max()};
+            std::ofstream randFile("random.bin",
+                                   std::ofstream::out | std::ofstream::binary);
+
+            std::vector<unsigned char> buf;
+            std::generate_n(std::back_inserter(buf), fileSizeInBytes,
+                            [&dist]() -> unsigned char { return dist(gen); });
+            randFile.write(reinterpret_cast<char*>(buf.data()),
+                           fileSizeInBytes);
+            randFile.close();
+            return SUCCESS;
+        } catch (po::error& ex) {
+            std::cerr << "ERROR: " << ex.what() << std::endl << std::endl;
+            std::cerr << desc << std::endl;
+            return ERROR_IN_COMMAND_LINE;
+        }
+    } catch (std::exception& ex) {
+        std::cerr << "Unhandled exception reached the top of main: "
+                  << ex.what() << std::endl;
+        return ERROR_UNHANDLED_EXCEPTION;
     }
-    auto fileSizeInBytes = vm["size"].as<long>();
-
-    std::uniform_int_distribution<unsigned short> dist{
-        std::numeric_limits<unsigned char>::min(),
-        std::numeric_limits<unsigned char>::max()};
-    std::ofstream randFile("random.bin",
-                           std::ofstream::out | std::ofstream::binary);
-
-    std::vector<unsigned char> buf;
-    std::generate_n(std::back_inserter(buf), fileSizeInBytes,
-                    [&dist]() -> unsigned char { return dist(gen); });
-    randFile.write(reinterpret_cast<char*>(buf.data()), fileSizeInBytes);
-    randFile.close();
-    return 0;
 }
