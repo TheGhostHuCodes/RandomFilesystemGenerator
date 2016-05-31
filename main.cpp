@@ -16,8 +16,10 @@
 #include <fstream>
 #include <random>
 #include "boost/program_options.hpp"
+#include "boost/filesystem.hpp"
 
 namespace po = boost::program_options;
+namespace fs = boost::filesystem;
 
 static std::random_device rd;
 static std::mt19937 gen{rd()};
@@ -50,12 +52,15 @@ int main(int argc, char** argv) {
             po::notify(vm);
 
             auto fileSizeInBytes = vm["size"].as<long>();
+            auto cwd = fs::current_path();
+            auto uniqueFilename = fs::unique_path();
 
             std::uniform_int_distribution<unsigned short> dist{
                 std::numeric_limits<unsigned char>::min(),
                 std::numeric_limits<unsigned char>::max()};
-            std::ofstream randFile("random.bin",
-                                   std::ofstream::out | std::ofstream::binary);
+
+            fs::ofstream randFile(cwd / uniqueFilename,
+                                  std::ofstream::out | std::ofstream::binary);
 
             std::vector<unsigned char> buf;
             std::generate_n(std::back_inserter(buf), fileSizeInBytes,

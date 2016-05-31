@@ -1,7 +1,7 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.5)
 PROJECT(RandomFilesystemGenerator)
 
-FIND_PACKAGE(Boost 1.60 COMPONENTS program_options REQUIRED)
+FIND_PACKAGE(Boost 1.60 COMPONENTS program_options filesystem REQUIRED)
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
 
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++ -std=c++11")
