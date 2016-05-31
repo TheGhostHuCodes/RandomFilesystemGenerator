@@ -55,7 +55,9 @@ int main(int argc, char** argv) {
 
             std::vector<unsigned char> buf;
             std::generate_n(std::back_inserter(buf), fileSizeInBytes,
-                            [&dist]() -> unsigned char { return dist(gen); });
+                            [&dist]() -> unsigned char {
+                                return static_cast<unsigned char>(dist(gen));
+                            });
             randFile.write(reinterpret_cast<char*>(buf.data()),
                            fileSizeInBytes);
             randFile.close();
