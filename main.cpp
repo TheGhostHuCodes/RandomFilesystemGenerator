@@ -28,23 +28,27 @@ const unsigned int ERROR_UNHANDLED_EXCEPTION = 2;
 
 int main(int argc, char** argv) {
     try {
-
         po::options_description desc(
             "Random Filesystem Generator: Allowed options");
         // clang-format off
         desc.add_options()
-                ("help", "produce help message")
+                ("help,h", "produce help message")
                 ("size,s", po::value<long>(), "size of file in bytes");
         // clang-format on
         po::variables_map vm;
         try {
             po::store(po::parse_command_line(argc, argv, desc), vm);
-            po::notify(vm);
 
             if (vm.count("help")) {
                 std::cout << desc << std::endl;
                 return SUCCESS;
             }
+            if (vm.empty()) {
+                throw po::error("Please use with program options");
+            }
+
+            po::notify(vm);
+
             auto fileSizeInBytes = vm["size"].as<long>();
 
             std::uniform_int_distribution<unsigned short> dist{
