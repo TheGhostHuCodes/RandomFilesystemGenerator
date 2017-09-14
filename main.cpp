@@ -17,6 +17,8 @@
 #include <random>
 #include "boost/program_options.hpp"
 #include "boost/filesystem.hpp"
+#include "utils.h"
+#include "stopwatch.h"
 
 namespace po = boost::program_options;
 namespace fs = boost::filesystem;
@@ -35,7 +37,8 @@ int main(int argc, char** argv) {
         // clang-format off
         desc.add_options()
                 ("help,h", "produce help message")
-                ("size,s", po::value<long>(), "size of file in bytes");
+                ("size,s", po::value<unsigned long>(), "size of file in bytes")
+                ("number,n", po::value<unsigned long>(), "number of files to generate");
         // clang-format on
         po::variables_map vm;
         try {
@@ -51,25 +54,34 @@ int main(int argc, char** argv) {
 
             po::notify(vm);
 
-            auto fileSizeInBytes = vm["size"].as<long>();
+            auto fileSizeInBytes = vm["size"].as<unsigned long>();
+            auto n = vm["number"].as<unsigned long>();
+            std::cout << "going to make " << n << " files" << std::endl;
             auto cwd = fs::current_path();
-            auto uniqueFilename = fs::unique_path();
 
             std::uniform_int_distribution<unsigned short> dist{
                 std::numeric_limits<unsigned char>::min(),
                 std::numeric_limits<unsigned char>::max()};
 
-            fs::ofstream randFile(cwd / uniqueFilename,
-                                  std::ofstream::out | std::ofstream::binary);
+            utils::PrintSpaceInfo(cwd);
 
-            std::vector<unsigned char> buf;
-            std::generate_n(std::back_inserter(buf), fileSizeInBytes,
-                            [&dist]() -> unsigned char {
-                                return static_cast<unsigned char>(dist(gen));
-                            });
-            randFile.write(reinterpret_cast<char*>(buf.data()),
-                           fileSizeInBytes);
-            randFile.close();
+            auto sw = StopWatch("Random File Generation");
+            for (auto i = 0; i < n; ++i) {
+                fs::ofstream randFile(cwd / fs::unique_path(),
+                                      std::ofstream::out |
+                                          std::ofstream::binary);
+
+                std::vector<unsigned char> buf(fileSizeInBytes);
+                std::generate_n(std::back_inserter(buf), fileSizeInBytes,
+                                [&dist]() -> unsigned char {
+                                    return static_cast<unsigned char>(
+                                        dist(gen));
+                                });
+                randFile.write(reinterpret_cast<char*>(buf.data()),
+                               fileSizeInBytes);
+                randFile.close();
+            }
+
             return SUCCESS;
         } catch (po::error& ex) {
             std::cerr << "ERROR: " << ex.what() << std::endl << std::endl;

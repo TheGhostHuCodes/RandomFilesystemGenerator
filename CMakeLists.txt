@@ -12,5 +12,5 @@ ENDIF(APPLE)
 ADD_LIBRARY(utils utils.h utils.cpp)
 TARGET_LINK_LIBRARIES(utils ${Boost_LIBRARIES})
 
-ADD_EXECUTABLE(rfg main.cpp utils.h)
+ADD_EXECUTABLE(rfg main.cpp utils.h stopwatch.h stopwatch.cpp)
 TARGET_LINK_LIBRARIES(rfg utils ${Boost_LIBRARIES})
